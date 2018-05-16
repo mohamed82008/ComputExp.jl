@@ -5,6 +5,8 @@ struct Problem end
 struct Experiment end
 struct Run end
 
+(db::ComputExpDB)(args...; kwargs...) = New!(db, args...; kwargs...)
+
 function New!(db, ::Type{Language}; name = missing, version = missing, commit = "")
     @check_not_missing "Language" (name, "name") (version, "version")
     @check_type String "Language" (name, "name") (version, "version") (commit, "commit")
