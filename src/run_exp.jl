@@ -8,13 +8,14 @@ macro run_exps(db)
     parameters = gensym()
     results = gensym()
     current_dir = gensym()
+    x = gensym()
     esc(quote
         using JuliaDB
         using Query
         
         # Extract the implementations
         $all_implementations = Int[]
-        x = @from i in db.runs_table begin
+        $x = @from i in db.runs_table begin
             @from j in db.experiments_table
             @where j.Execute && i.Experiment_ID == j.ID && !i.Executed && !i.Executing
             @select i.Implementation_ID
@@ -32,11 +33,13 @@ macro run_exps(db)
 
             i = db.implementations_table[implementation]
             $functions[implementation] = i.Function
-            if i.Commit != ComputExp.HEAD(i.Repository)
+            if i.Repository != "" && i.Commit != "" && i.Commit != ComputExp.HEAD(i.Repository)
                 ComputExp.STASH(i.Repository)
                 ComputExp.CHECKOUT(i.Repository, i.Commit)
             end
-            eval(parse("using $(i.Repository)"))
+            if i.Repository != ""
+                eval(parse("using $(i.Repository)"))
+            end
             include(i.Script)
 
             params = @from j in db.implementation_parameters_table begin
